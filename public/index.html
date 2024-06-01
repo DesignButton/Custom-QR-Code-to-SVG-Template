@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generation Test</title>
+    <style>
+        #result {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code Generation Test</h1>
+    <div id="result"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const templateSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 1024 768" fill="none" class="template-graphic">
+            <rect width="1024" height="768" fill="#2663FF" class="background"></rect>
+            <g class="logo">
+                <!-- Logo paths -->
+                <path d="M507.044 278.905C506.303 227.831 431.731 243.301 431.731 221.447C431.731 214.817 437.163 210.888 447.04 210.888C458.893 210.888 466.054 217.027 467.288 226.358H506.303C503.587 199.348 483.833 179.704 448.275 179.704C412.223 179.704 392.222 198.857 392.222 222.184C392.222 272.521 467.288 256.56 467.288 278.66C467.288 284.799 461.609 289.709 450.744 289.709C439.139 289.709 430.496 283.325 429.508 273.749H387.777C389.753 300.268 414.446 320.649 451.238 320.649C485.808 320.649 507.044 302.724 507.044 278.905Z" fill="white"></path>
+                <path d="M516.827 318.684H559.052V261.226L601.029 318.684H653.378L595.597 250.422L652.885 181.668H600.783L559.052 237.408V136.978H516.827V318.684Z" fill="white"></path>
+                <path d="M653.419 318.684H695.644V181.668H653.419V318.684ZM674.655 167.426C689.471 167.426 699.595 157.359 699.595 144.836C699.595 132.067 689.471 122 674.655 122C659.592 122 649.468 132.067 649.468 144.836C649.468 157.359 659.592 167.426 674.655 167.426Z" fill="white"></path>
+                <path d="M752.418 201.067V181.668H710.193V384H752.418V299.531C760.073 311.072 774.642 320.649 794.89 320.649C828.719 320.649 855.634 293.147 855.634 249.931C855.634 206.714 828.719 179.704 794.89 179.704C774.642 179.704 760.073 189.035 752.418 201.067ZM812.669 249.931C812.669 271.784 798.347 284.062 782.297 284.062C766.493 284.062 752.171 272.03 752.171 250.176C752.171 228.322 766.493 216.291 782.297 216.291C798.347 216.291 812.669 228.077 812.669 249.931Z" fill="white"></path>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M301.569 169.35C293.618 169.35 285.907 172.601 280.169 178.527L277.985 180.781C274.881 183.984 270.604 185.794 266.134 185.794C261.665 185.794 257.387 183.985 254.283 180.782L252.101 178.53L252.1 178.529C240.249 166.296 221.145 166.296 209.294 178.529C197.301 190.908 197.301 211.085 209.294 223.465L220.727 235.266L197.025 258.035L185.592 246.234C161.29 221.149 161.29 180.844 185.592 155.759C207.387 133.263 241.389 130.536 266.143 147.579C276.49 140.475 288.797 136.556 301.569 136.556C318.618 136.556 334.837 143.539 346.672 155.757L346.676 155.761C358.415 167.875 364.905 184.15 364.905 200.997C364.905 217.767 358.474 233.969 346.838 246.064C341.688 251.674 336.751 257.071 331.928 262.342L331.865 262.41C322.952 272.151 314.431 281.464 305.689 290.904H329.805V323.699L251.611 323.699V323.695H251.04V245.825H283.974V265.974C291.731 257.579 299.376 249.224 307.395 240.46L307.408 240.445C312.318 235.08 317.368 229.561 322.669 223.786C322.77 223.677 322.871 223.569 322.974 223.463C328.689 217.566 331.971 209.495 331.971 200.997C331.971 192.498 328.69 184.428 322.974 178.531L322.97 178.527C317.231 172.601 309.52 169.35 301.569 169.35Z" fill="white"></path>
+            </g>
+            <g class="qr-code-target">
+                <rect x="361.5" y="384.5" width="299" height="299" fill="black" fill-opacity="0.1" stroke="black" class="qr-placeholder"></rect>
+            </g>
+        </svg>`;
+
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = templateSVG;
+
+        // Function to generate QR code SVG using your local server
+        const generateQRCodeSVG = async (url) => {
+            try {
+                const response = await axios.post('/generate-qr', { url });
+                console.log('QR Code response:', response.data);
+                return response.data;
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+                return null;
+            }
+        };
+
+        // Function to combine the QR code SVG with the template SVG
+        const combineSVGs = (templateSVG, qrCodeSVG) => {
+            const parser = new DOMParser();
+            const templateDoc = parser.parseFromString(templateSVG, 'image/svg+xml');
+            const qrCodeDoc = parser.parseFromString(qrCodeSVG, 'image/svg+xml');
+
+            const qrPlaceholder = templateDoc.querySelector('.qr-code-target');
+            qrPlaceholder.innerHTML = qrCodeDoc.documentElement.innerHTML;
+
+            return new XMLSerializer().serializeToString(templateDoc);
+        };
+
+        (async () => {
+            const profileUrl = 'https://www.wikipedia.org'; // Replace with a test URL
+            const qrCodeSVG = await generateQRCodeSVG(profileUrl);
+
+            if (qrCodeSVG) {
+                const combinedSVG = combineSVGs(templateSVG, qrCodeSVG);
+
+                // Display the final combined SVG in the result div
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = combinedSVG;
+
+                console.log('Combined SVG:', combinedSVG);
+            } else {
+                console.error('Failed to generate QR code.');
+            }
+        })();
+    </script>
+</body>
+</html>
